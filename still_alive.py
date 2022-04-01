@@ -39,18 +39,18 @@ def drawLeftPanel(screen, left_text):
     for i, l in enumerate(split_text):
         screen.addstr(i + 1, 2, l)
 
-def drawLeftPanelCursor(screen, left_text):
-    split_text = left_text.split('\n')
-    # Find and remove previous last cursor position
-    if len(split_text) > 1:
-        last_cursor_y = len(split_text) - 1
-        last_cursor_x = len(split_text[-2]) + 2
-        screen.addch(last_cursor_y, last_cursor_x, ' ')
+# def drawLeftPanelCursor(screen, left_text):
+#     split_text = left_text.split('\n')
+#     # Find and remove previous last cursor position
+#     if len(split_text) > 1:
+#         last_cursor_y = len(split_text) - 1
+#         last_cursor_x = len(split_text[-2]) + 2
+#         screen.addch(last_cursor_y, last_cursor_x, ' ')
 
-    # Find and draw last cursor position (using seconds to blink)
-    last_cursor_y = len(split_text)
-    last_cursor_x = len(split_text[-1]) + 2
-    screen.addch(last_cursor_y, last_cursor_x, '_' if int(time.time() * 4) % 2 else ' ')
+#     # Find and draw last cursor position (using seconds to blink)
+#     last_cursor_y = len(split_text)
+#     last_cursor_x = len(split_text[-1]) + 2
+#     screen.addch(last_cursor_y, last_cursor_x, '_' if int(time.time() * 4) % 2 else ' ')
 
 def clearLeftPanel(screen):
     height, width = screen.getmaxyx()
@@ -69,7 +69,7 @@ def main(screen):
 
     curses.curs_set(0)
 
-    threading.Thread(target=playsound, args=('still_alive.mp3',)).start()
+    # threading.Thread(target=playsound, args=('still_alive.mp3',)).start()
 
     # must be larger than 120x80, otherwise exit
     if width < 90 or height < 40:
@@ -96,6 +96,10 @@ def main(screen):
 
     # We don't need to redraw left panel text everytime, so keep track if text changed
     left_text_changed = False
+
+    # Keep track of left panel cursor position
+    left_cursor_y = 0
+    left_cursor_x = 0
 
     # Keep track of time
     line_start_time = time.time()
@@ -158,15 +162,24 @@ def main(screen):
                 ascii_art_drawn = True
 
             if left_text_changed:
+                left_text_split = left_text.split('\n')
+
                 # Draw left panel text
                 drawLeftPanel(screen, left_text)
+
+                # Clear cursor at previous cursor position
+                screen.addch(left_cursor_y, left_cursor_x, ' ')
+
+                # Recompute cursor position
+                left_cursor_y = len(left_text_split)
+                left_cursor_x = len(left_text_split[-1]) + 2
 
                 # Draw border
                 drawBorder(screen, 0, 0, half_width - 1, height)
                 drawBorder(screen, half_width, 0, half_width - 1, half_height)
 
-            # Draw left panel cursor
-            drawLeftPanelCursor(screen, left_text)
+            # Draw new left panel cursor at new position
+            screen.addch(left_cursor_y, left_cursor_x, '_' if int(time.time() * 4) % 2 else ' ')
 
             # Refresh screen
             screen.refresh()
