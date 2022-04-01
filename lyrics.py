@@ -3,16 +3,20 @@ from ascii_art import *
 # lyrics downloaded also from https://combineoverwiki.net/wiki/Still_Alive
 
 class TimedLyric:
-    def __init__(self, text, duration=2, ascii_art=None):
+    def __init__(self, text, duration=2, pause=0, ascii_art=None):
         self.text = text
         self.duration = duration
+        self.pause = pause
         self.ascii_art = ascii_art
+    
+    def totalDuration(self):
+        return self.duration + self.pause
 
 
 still_alive_lyrics = [
     TimedLyric("<clear>", ascii_art=ascii_empty),
-    TimedLyric("Forms FORM-29827281-12:\nTest Assessment Report\n\n"),
-    TimedLyric("This was a triumph."),
+    TimedLyric("Forms FORM-29827281-12:\nTest Assessment Report\n\n", duration=7),
+    TimedLyric("This was a triumph.", duration=2, pause=2),
     TimedLyric("I'm making a note here:"),
     TimedLyric("HUGE SUCCESS."),
     TimedLyric("It's hard to overstate"),

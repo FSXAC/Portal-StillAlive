@@ -1,6 +1,8 @@
+
 import time
 
 import curses
+import logging
 
 
 from lyrics import *
@@ -31,8 +33,20 @@ def drawASCIIArt(screen, x, y, ascii_art):
         pass
 
 def drawLeftPanel(screen, left_text):
-    for i, l in enumerate(left_text.split('\n')):
+    split_text = left_text.split('\n')
+    for i, l in enumerate(split_text):
         screen.addstr(i + 1, 2, l)
+
+    # Find and remove previous last cursor position
+    if len(split_text) > 1:
+        last_cursor_y = len(split_text) - 1
+        last_cursor_x = len(split_text[-2]) + 2
+        screen.addch(last_cursor_y, last_cursor_x, ' ')
+
+    # Find and draw last cursor position (using seconds to blink)
+    last_cursor_y = len(split_text)
+    last_cursor_x = len(split_text[-1]) + 2
+    screen.addch(last_cursor_y, last_cursor_x, '_' if int(time.time() * 4) % 2 else ' ')
 
 def clearLeftPanel(screen):
     height, width = screen.getmaxyx()
@@ -55,52 +69,79 @@ def main(screen):
         # throw error
         screen.addstr(0, 0, "ERROR: Screen must be at least 120x40")
         screen.refresh()
-        time.sleep(2)
+        time.sleep(5)
 
     # flag for done or not
     done = False
 
     # A variable to keep track of text in the text box
-    left_text = ""
+    left_text = "hello world"
+
+    # A variable to keep track of current line index
+    current_line_index = 0
+
+    # Keep track of character index in a line
+    current_char_index = 0
+
+    # Keep track of time
+    line_start_time = time.time()
+    char_start_time = time.time()
 
     try:
         while not done:
-            # Draw the main borders
+
+            line = still_alive_lyrics[current_line_index]
+            line_text = line.text
+
+            # Clear left side if line text says clear
+            if line_text == '<clear>':
+                clearLeftPanel(screen)
+                left_text = ""
+                current_line_index += 1
+                continue
+
+            line_duration = line.duration
+            line_total_duration = line.totalDuration()
+            character_time_delta = line_duration / len(line.text)
+
+            # if there is still text to display
+            if current_char_index < len(line_text):
+                # check if times up
+                if time.time() - char_start_time > character_time_delta:
+                    # add character to left text
+                    left_text += line_text[current_char_index]
+                    current_char_index += 1
+                    # update last time
+                    char_start_time = time.time()
+                
+                # Add extra new line character if it was the last character
+                if current_char_index == len(line_text):
+                    left_text += '\n'
+            else:
+                # if time hasn't reached total duration
+                if time.time() - line_start_time < line_total_duration:
+                    # do nothing
+                    pass
+                else:
+                    # if time has reached total duration
+                    # move to next line
+                    current_line_index += 1
+                    # reset last time
+                    line_start_time = time.time()
+                    # reset char index
+                    current_char_index = 0
+
+
+            # Draw ASCII if line activates ascii
+            if line.ascii_art:
+                drawASCIIArt(screen, width // 2, height // 2, line.ascii_art)
+
+
             drawBorder(screen, 0, 0, width // 2 - 1, height)
             drawBorder(screen, width // 2, 0, width // 2 - 1, height // 2)
-            # screen.refresh()
-
-            # for i in range(10):
-            #     screen.addstr(i, 0, "A" * 80)
-            # screen.refresh()
-            # clearLeftPanel(screen)
-
-            for line in still_alive_lyrics:
-
-                if line.ascii_art:
-                    drawASCIIArt(screen, width // 2, height // 2, line.ascii_art)
-                
-                if line.text == '<clear>':
-                    left_text = ""
-                    clearLeftPanel(screen)
-                    continue
-                elif line.text == '<pause>':
-                    time.sleep(9999)
-                    continue
-
-                # print(line.text)
-                left_text += line.text + '\n'
-                drawBorder(screen, 0, 0, width // 2 - 1, height)
-                drawBorder(screen, width // 2, 0, width // 2 - 1, height // 2)
-                # screen.addstr(1, 1, left_text)
-                drawLeftPanel(screen, left_text)
-
-                screen.refresh()
-                time.sleep(line.duration)
-
-                screen.refresh()
-
-            time.sleep(2)
+            drawLeftPanel(screen, left_text)
+            screen.refresh()
+            time.sleep(0.05)
     except:
         pass
     
