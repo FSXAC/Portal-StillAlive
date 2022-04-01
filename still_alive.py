@@ -105,12 +105,15 @@ def main(screen):
     line_start_time = time.time()
     char_start_time = time.time()
 
+    # Cache the lyric line data
+    line = None
+    line_text = ""
+    line_duration = 0.0
+    line_total_duration = 0.0
+    line_char_tdelta = 0.0
+
     try:
         while not done:
-
-            line = still_alive_lyrics[current_line_index]
-            line_text = line.text
-
             # Clear left side if line text says clear
             if line_text == '<clear>' and left_text != '':
                 clearLeftPanel(screen)
@@ -118,16 +121,12 @@ def main(screen):
                 current_line_index += 1
                 continue
 
-            line_duration = line.duration
-            line_total_duration = line.totalDuration()
-            character_time_delta = line_duration / len(line.text)
-
             left_text_changed = False
 
             # if there is still text to display
             if current_char_index < len(line_text):
                 # check if times up
-                if time.time() - char_start_time > character_time_delta:
+                if time.time() - char_start_time > line_char_tdelta:
                     # add character to left text
                     left_text += line_text[current_char_index]
                     current_char_index += 1
@@ -145,8 +144,18 @@ def main(screen):
                     # if time has reached total duration
                     # move to next line if there is still lines in the lyrics
                     if current_line_index < len(still_alive_lyrics) - 1:
+                        prev_line_index = current_line_index
                         current_line_index += 1
                         current_char_index = 0
+
+                        # fetch next line data
+                        line = still_alive_lyrics[current_line_index]
+                        line_text = line.text
+                        line_duration = line.duration
+                        line_total_duration = line.totalDuration()
+                        line_char_tdelta = line_duration / len(line_text)
+
+                        # reset time
                         line_start_time = time.time()
                         char_start_time = time.time()
 
