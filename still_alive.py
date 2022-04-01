@@ -28,6 +28,7 @@ def main(screen):
         screen.refresh()
         time.sleep(2)
 
+    # Draw the main borders
     drawBorder(screen, 0, 0, width // 2 - 1, height)
     drawBorder(screen, width // 2, 0, width // 2 - 1, height // 2)
     screen.refresh()
