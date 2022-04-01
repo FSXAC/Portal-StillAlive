@@ -73,7 +73,7 @@ def main(screen):
     if width < 90 or height < 40:
 
         # throw error
-        screen.addstr(0, 0, "ERROR: Screen must be at least 120x40")
+        screen.addstr(0, 0, "ERROR: Screen must be at least 90x40")
         screen.refresh()
         time.sleep(5)
 
@@ -81,7 +81,7 @@ def main(screen):
     done = False
 
     # A variable to keep track of text in the text box
-    left_text = "hello world"
+    left_text = "Hello world"
 
     # A variable to keep track of current line index
     current_line_index = 0
@@ -98,12 +98,20 @@ def main(screen):
 
             line = still_alive_lyrics[current_line_index]
             line_text = line.text
+
+            # Clear left side if line text says clear
+            if line_text == '<clear>' and left_text != '':
+                clearLeftPanel(screen)
+                left_text = ""
+                current_line_index += 1
+                continue
+
             line_duration = line.duration
             line_total_duration = line.totalDuration()
             character_time_delta = line_duration / len(line.text)
 
             # if there is still text to display
-            if current_char_index < len(line_text) and line_text != '<clear>':
+            if current_char_index < len(line_text):
                 # check if times up
                 if time.time() - char_start_time > character_time_delta:
                     # add character to left text
@@ -128,15 +136,10 @@ def main(screen):
                     else:
                         # if there is no more lines, exit
                         done = True
-            
-            # Clear left side if line text says clear
-            if line_text == '<clear>' and left_text != '':
-                clearLeftPanel(screen)
-                left_text = ""
 
             # Draw ASCII if line activates ascii (centered in its corner)
             if line.ascii_art:
-                drawASCIIArt(screen, max((half_width - 40) // 2, 0) + half_width, half_height, line.ascii_art)
+                drawASCIIArt(screen, max((half_width - 40) // 2, 0) + half_width, half_height - 1, line.ascii_art)
 
 
             drawBorder(screen, 0, 0, half_width - 1, height)
@@ -152,4 +155,4 @@ def main(screen):
 
 if __name__ == '__main__':
     curses.wrapper(main)
-    print('Thank you for participating in this enrichment activity!')
+    print('Thank you for participating in this enrichment center activity!')

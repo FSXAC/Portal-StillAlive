@@ -15,9 +15,9 @@ class TimedLyric:
 
 
 still_alive_lyrics = [
-    TimedLyric("<clear>", pause=0.5, ascii_art=ascii_empty),
+    TimedLyric("<clear>", ascii_art=ascii_empty),
     TimedLyric("Forms FORM-29827281-12:\nTest Assessment Report\n\n\n\n", duration=6, pause=2),
-    TimedLyric("This was a triumph.\n", duration=2, pause=1),
+    TimedLyric("This was a triumph.\n", duration=1, pause=2),
     TimedLyric("I'm making a note here:\n", duration=2.3),
     TimedLyric("HUGE SUCCESS.\n", duration=1.8, pause=1),
     TimedLyric("It's hard to overstate\n", duration=2.5),
@@ -89,6 +89,6 @@ still_alive_lyrics = [
     TimedLyric("FINAL THOUGHT PS:\nAnd when you're dead I will be\n", duration=1.9),
     TimedLyric("still alive.\n\n", duration=1, pause=1),
     TimedLyric("STILL ALIVE\n\n", duration=1.4),
-    TimedLyric("<clear>", pause=10),
-    TimedLyric(" ",)
+    TimedLyric("<clear>"),
+    TimedLyric(" ", duration=10)
 ]
