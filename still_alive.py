@@ -113,10 +113,7 @@ def main(screen):
                     current_char_index += 1
                     # update last time
                     char_start_time = time.time()
-                
-                # Add extra new line character if it was the last character
-                if current_char_index == len(line_text):
-                    left_text += '\n'
+
             else:
                 # if time hasn't reached total duration
                 if time.time() - line_start_time < line_total_duration:
@@ -124,13 +121,15 @@ def main(screen):
                     pass
                 else:
                     # if time has reached total duration
-                    # move to next line
-                    current_line_index += 1
-                    # reset last time
-                    line_start_time = time.time()
-                    # reset char index
-                    current_char_index = 0
-
+                    # move to next line if there is still lines in the lyrics
+                    if current_line_index < len(still_alive_lyrics) - 1:
+                        current_line_index += 1
+                        current_char_index = 0
+                        line_start_time = time.time()
+                        char_start_time = time.time()
+                    else:
+                        # if there is no more lines, exit
+                        done = True
 
             # Draw ASCII if line activates ascii
             if line.ascii_art:
@@ -141,9 +140,15 @@ def main(screen):
             drawBorder(screen, width // 2, 0, width // 2 - 1, height // 2)
             drawLeftPanel(screen, left_text)
             screen.refresh()
-            time.sleep(0.05)
+            # time.sleep(0.05)
+
+        # Done
+        time.sleep(5)
     except:
         pass
+
+    # Exit
+    curses.endwin()
     
 
 if __name__ == '__main__':
