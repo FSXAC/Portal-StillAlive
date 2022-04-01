@@ -2,15 +2,17 @@
 import time
 
 import curses
-import logging
+
+import threading
+from playsound import playsound
 
 
 from lyrics import *
 
 def drawBorder(screen, x, y, width, height):
     try:
-        screen.addstr(y, x, "-" * (width - 2))
-        screen.addstr(y + height - 1, x, "-" * (width - 2))
+        screen.addstr(y, x, "-" * (width - 1))
+        screen.addstr(y + height - 1, x, "-" * (width - 1))
 
         for i in range(y, y + height):
             screen.addch(i, x, "|")
@@ -60,11 +62,15 @@ def clearLeftPanel(screen):
 def main(screen):
     # get height and width from screen
     height, width = screen.getmaxyx()
+    half_width = width // 2
+    half_height = height // 2
 
     curses.curs_set(0)
 
+    threading.Thread(target=playsound, args=('still_alive.mp3',)).start()
+
     # must be larger than 120x80, otherwise exit
-    if width < 120 or height < 40:
+    if width < 90 or height < 40:
 
         # throw error
         screen.addstr(0, 0, "ERROR: Screen must be at least 120x40")
@@ -92,20 +98,12 @@ def main(screen):
 
             line = still_alive_lyrics[current_line_index]
             line_text = line.text
-
-            # Clear left side if line text says clear
-            if line_text == '<clear>':
-                clearLeftPanel(screen)
-                left_text = ""
-                current_line_index += 1
-                continue
-
             line_duration = line.duration
             line_total_duration = line.totalDuration()
             character_time_delta = line_duration / len(line.text)
 
             # if there is still text to display
-            if current_char_index < len(line_text):
+            if current_char_index < len(line_text) and line_text != '<clear>':
                 # check if times up
                 if time.time() - char_start_time > character_time_delta:
                     # add character to left text
@@ -130,20 +128,21 @@ def main(screen):
                     else:
                         # if there is no more lines, exit
                         done = True
+            
+            # Clear left side if line text says clear
+            if line_text == '<clear>' and left_text != '':
+                clearLeftPanel(screen)
+                left_text = ""
 
-            # Draw ASCII if line activates ascii
+            # Draw ASCII if line activates ascii (centered in its corner)
             if line.ascii_art:
-                drawASCIIArt(screen, width // 2, height // 2, line.ascii_art)
+                drawASCIIArt(screen, max((half_width - 40) // 2, 0) + half_width, half_height, line.ascii_art)
 
 
-            drawBorder(screen, 0, 0, width // 2 - 1, height)
-            drawBorder(screen, width // 2, 0, width // 2 - 1, height // 2)
+            drawBorder(screen, 0, 0, half_width - 1, height)
+            drawBorder(screen, half_width, 0, half_width - 1, half_height)
             drawLeftPanel(screen, left_text)
             screen.refresh()
-            # time.sleep(0.05)
-
-        # Done
-        time.sleep(5)
     except:
         pass
 
@@ -153,3 +152,4 @@ def main(screen):
 
 if __name__ == '__main__':
     curses.wrapper(main)
+    print('Thank you for participating in this enrichment activity!')
