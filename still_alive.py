@@ -39,6 +39,8 @@ def drawLeftPanel(screen, left_text):
     for i, l in enumerate(split_text):
         screen.addstr(i + 1, 2, l)
 
+def drawLeftPanelCursor(screen, left_text):
+    split_text = left_text.split('\n')
     # Find and remove previous last cursor position
     if len(split_text) > 1:
         last_cursor_y = len(split_text) - 1
@@ -89,6 +91,12 @@ def main(screen):
     # Keep track of character index in a line
     current_char_index = 0
 
+    # Keep track if ascii art has been drawn or not
+    ascii_art_drawn = False
+
+    # We don't need to redraw left panel text everytime, so keep track if text changed
+    left_text_changed = False
+
     # Keep track of time
     line_start_time = time.time()
     char_start_time = time.time()
@@ -110,6 +118,8 @@ def main(screen):
             line_total_duration = line.totalDuration()
             character_time_delta = line_duration / len(line.text)
 
+            left_text_changed = False
+
             # if there is still text to display
             if current_char_index < len(line_text):
                 # check if times up
@@ -117,6 +127,7 @@ def main(screen):
                     # add character to left text
                     left_text += line_text[current_char_index]
                     current_char_index += 1
+                    left_text_changed = True
                     # update last time
                     char_start_time = time.time()
 
@@ -124,6 +135,7 @@ def main(screen):
                 # if time hasn't reached total duration
                 if time.time() - line_start_time < line_total_duration:
                     # do nothing
+                    need_refresh = False
                     pass
                 else:
                     # if time has reached total duration
@@ -133,18 +145,30 @@ def main(screen):
                         current_char_index = 0
                         line_start_time = time.time()
                         char_start_time = time.time()
+
+                        # reset ascii art flag
+                        ascii_art_drawn = False
                     else:
                         # if there is no more lines, exit
                         done = True
 
             # Draw ASCII if line activates ascii (centered in its corner)
-            if line.ascii_art:
+            if line.ascii_art and not ascii_art_drawn:
                 drawASCIIArt(screen, max((half_width - 40) // 2, 0) + half_width, half_height - 1, line.ascii_art)
+                ascii_art_drawn = True
 
+            if left_text_changed:
+                # Draw left panel text
+                drawLeftPanel(screen, left_text)
 
-            drawBorder(screen, 0, 0, half_width - 1, height)
-            drawBorder(screen, half_width, 0, half_width - 1, half_height)
-            drawLeftPanel(screen, left_text)
+                # Draw border
+                drawBorder(screen, 0, 0, half_width - 1, height)
+                drawBorder(screen, half_width, 0, half_width - 1, half_height)
+
+            # Draw left panel cursor
+            drawLeftPanelCursor(screen, left_text)
+
+            # Refresh screen
             screen.refresh()
     except:
         pass
