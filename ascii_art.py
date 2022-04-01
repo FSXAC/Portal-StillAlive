@@ -1,5 +1,28 @@
 
 # ASCII ARTS from https://combineoverwiki.net/wiki/Still_Alive
+ascii_empty = """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+
 ascii_aperture = """
              .,-:;//;:=,
          . :H@@@MM@M#H/.,+%;,

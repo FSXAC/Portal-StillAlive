@@ -8,7 +8,9 @@ class TimedLyric:
         self.duration = duration
         self.ascii_art = ascii_art
 
-lyrics = [
+
+still_alive_lyrics = [
+    TimedLyric("<clear>", ascii_art=ascii_empty),
     TimedLyric("Forms FORM-29827281-12:\nTest Assessment Report\n\n"),
     TimedLyric("This was a triumph."),
     TimedLyric("I'm making a note here:"),
@@ -29,6 +31,7 @@ lyrics = [
     TimedLyric("For the people who are", ascii_art=ascii_aperture),
     TimedLyric("still alive."),
     TimedLyric("<clear>"),
+    # TimedLyric("<pause>"),
 
     TimedLyric("Forms FORM-55551-5:\nPersonnel File Addendum:\n\nDear <<Subject Name Here>>,\n\n"),
     TimedLyric("I'm not even angry."),
