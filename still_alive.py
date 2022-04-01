@@ -39,19 +39,6 @@ def drawLeftPanel(screen, left_text):
     for i, l in enumerate(split_text):
         screen.addstr(i + 1, 2, l)
 
-# def drawLeftPanelCursor(screen, left_text):
-#     split_text = left_text.split('\n')
-#     # Find and remove previous last cursor position
-#     if len(split_text) > 1:
-#         last_cursor_y = len(split_text) - 1
-#         last_cursor_x = len(split_text[-2]) + 2
-#         screen.addch(last_cursor_y, last_cursor_x, ' ')
-
-#     # Find and draw last cursor position (using seconds to blink)
-#     last_cursor_y = len(split_text)
-#     last_cursor_x = len(split_text[-1]) + 2
-#     screen.addch(last_cursor_y, last_cursor_x, '_' if int(time.time() * 4) % 2 else ' ')
-
 def clearLeftPanel(screen):
     height, width = screen.getmaxyx()
     try:
@@ -69,7 +56,7 @@ def main(screen):
 
     curses.curs_set(0)
 
-    # threading.Thread(target=playsound, args=('still_alive.mp3',)).start()
+    threading.Thread(target=playsound, args=('still_alive.mp3',)).start()
 
     # must be larger than 120x80, otherwise exit
     if width < 90 or height < 40:
@@ -106,31 +93,44 @@ def main(screen):
     char_start_time = time.time()
 
     # Cache the lyric line data
-    line = None
-    line_text = ""
-    line_duration = 0.0
-    line_total_duration = 0.0
-    line_char_tdelta = 0.0
+    line = still_alive_lyrics[current_line_index]
+    line_text = line.text
+    line_len = len(line_text)
+    line_duration = line.duration
+    line_total_duration = line.totalDuration()
+    line_char_tdelta = line_duration / line_len
+
+    # Cache cursor data
+    cursor_char = '_'
+    cursor_update_time = 0.3
+    cursor_start_time = time.time()
+
 
     try:
         while not done:
+
+            # Need refresh
+            need_refresh = False
+            left_text_changed = False
+            cursor_changed = False
+
             # Clear left side if line text says clear
-            if line_text == '<clear>' and left_text != '':
+            if line_text == '<clear>' and left_text:
                 clearLeftPanel(screen)
                 left_text = ""
-                current_line_index += 1
-                continue
-
-            left_text_changed = False
+                left_text_changed = True
 
             # if there is still text to display
-            if current_char_index < len(line_text):
+            if current_char_index < line_len:
                 # check if times up
                 if time.time() - char_start_time > line_char_tdelta:
                     # add character to left text
                     left_text += line_text[current_char_index]
                     current_char_index += 1
+
+                    # Indicate content has changed
                     left_text_changed = True
+
                     # update last time
                     char_start_time = time.time()
 
@@ -138,7 +138,6 @@ def main(screen):
                 # if time hasn't reached total duration
                 if time.time() - line_start_time < line_total_duration:
                     # do nothing
-                    need_refresh = False
                     pass
                 else:
                     # if time has reached total duration
@@ -151,9 +150,10 @@ def main(screen):
                         # fetch next line data
                         line = still_alive_lyrics[current_line_index]
                         line_text = line.text
+                        line_len = len(line_text)
                         line_duration = line.duration
                         line_total_duration = line.totalDuration()
-                        line_char_tdelta = line_duration / len(line_text)
+                        line_char_tdelta = line_duration / line_len
 
                         # reset time
                         line_start_time = time.time()
@@ -169,29 +169,45 @@ def main(screen):
             if line.ascii_art and not ascii_art_drawn:
                 drawASCIIArt(screen, max((half_width - 40) // 2, 0) + half_width, half_height - 1, line.ascii_art)
                 ascii_art_drawn = True
+                need_refresh = True
 
             if left_text_changed:
                 left_text_split = left_text.split('\n')
+                left_text_split_len = len(left_text_split)
 
                 # Draw left panel text
                 drawLeftPanel(screen, left_text)
 
-                # Clear cursor at previous cursor position
-                screen.addch(left_cursor_y, left_cursor_x, ' ')
+                if left_text_split_len > 1:
+                    last_cursor_y = left_text_split_len - 1
+                    last_cursor_x = len(left_text_split[-2]) + 2
+                    screen.addch(last_cursor_y, last_cursor_x, ' ')
 
                 # Recompute cursor position
-                left_cursor_y = len(left_text_split)
+                left_cursor_y = left_text_split_len
                 left_cursor_x = len(left_text_split[-1]) + 2
+                cursor_changed = True
 
                 # Draw border
                 drawBorder(screen, 0, 0, half_width - 1, height)
                 drawBorder(screen, half_width, 0, half_width - 1, half_height)
 
-            # Draw new left panel cursor at new position
-            screen.addch(left_cursor_y, left_cursor_x, '_' if int(time.time() * 4) % 2 else ' ')
+                # Need to redraw
+                need_refresh = True
+
+            # Update cursor state
+            if time.time() - cursor_start_time > cursor_update_time:
+                cursor_start_time = time.time()
+                cursor_char = '_' if cursor_char == ' ' else ' '
+                cursor_changed = True
+
+            if cursor_changed:
+                screen.addch(left_cursor_y, left_cursor_x, cursor_char)
+                need_refresh = True
 
             # Refresh screen
-            screen.refresh()
+            if need_refresh:
+                screen.refresh()
     except:
         pass
 

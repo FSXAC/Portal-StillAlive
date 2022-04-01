@@ -1,5 +1,5 @@
 __pycache__/*.pyc
 *.pyc
 *.mp3
-still_alive.txt
+still_alive*.txt
 *.DS_Store
